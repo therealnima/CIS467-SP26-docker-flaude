@@ -25,7 +25,7 @@ CIS467-SP26-docker-flaude/
 ├── nginx.conf
 ├── index.html
 ├── src/
-│   ├── app.js      
+│   ├── app.js
 │   └── style.css
 ```
 
@@ -53,6 +53,7 @@ docker build -t lab-nginx . && docker run --rm -p 8080:80 lab-nginx
 ## Checkpoint 0 — Baseline (Just Serve Files)
 
 ### Goal
+
 Confirm the site loads before any custom configuration is applied.
 
 ### nginx.conf
@@ -80,13 +81,24 @@ curl -I http://localhost:8080/
 **Expected:** `200 OK`, no special headers, no compression.
 
 ### 0.1 - Reflection Question
+
 > What headers does nginx send by default? Are any of them surprising?
+> HTTP/1.1 200 OK
+> Server: nginx/1.29.5
+> Date: Wed, 11 Mar 2026 18:22:02 GMT
+> Content-Type: text/html
+> Content-Length: 19820
+> Last-Modified: Mon, 09 Mar 2026 18:56:20 GMT
+> Connection: keep-alive
+> ETag: "69af17d4-4d6c"
+> I didn't know what ETag was, and I looked it up which is a File fingerprint used for caching validation
 
 ---
 
 ## Checkpoint 1 — Compression
 
 ### Goal
+
 Reduce asset transfer size for text-based files using gzip.
 
 ### Changes to `nginx.conf`
@@ -111,6 +123,7 @@ Also verify in browser DevTools → Network tab → select a JS or CSS file →
 check the **Response Headers** panel.
 
 ### 1.1 Reflection Question
+
 > Why does `gzip_min_length` exist? What's the cost of compressing a 200-byte file?
 
 ---
@@ -118,6 +131,7 @@ check the **Response Headers** panel.
 ## Checkpoint 2 — Cache Control
 
 ### Goal
+
 Apply appropriate caching strategies: aggressive caching for fingerprinted assets,
 no caching for HTML entry points.
 
@@ -147,6 +161,7 @@ curl -I http://localhost:8080/My_Differential_Equation.mp4
 Confirm different `Cache-Control` values on each response.
 
 ### 2.1 - Reflection Question
+
 > Why would caching `index.html` aggressively be dangerous for a single-page app?
 > What would happen if a user's browser cached a stale `index.html` pointing to
 > old JS bundles?
@@ -156,6 +171,7 @@ Confirm different `Cache-Control` values on each response.
 ## Checkpoint 3 — Security Headers
 
 ### Goal
+
 Protect users from common browser-level attacks by adding standard security headers.
 
 ### Changes to `nginx.conf`
@@ -183,6 +199,7 @@ Also check: https://securityheaders.com (enter `http://localhost:8080` if using
 a tunneling tool, or deploy to a VPS for full scoring).
 
 ### 3.1 - Reflection Questions
+
 > Break the CSP intentionally — add an inline `<script>` tag to `index.html`
 > and observe the browser console error. What does this teach you about
 > how CSP is enforced?
@@ -192,6 +209,7 @@ a tunneling tool, or deploy to a VPS for full scoring).
 ## Checkpoint 4 — SPA Routing Fallback
 
 ### Goal
+
 Ensure that client-side routes (e.g., `/dashboard`, `/profile/42`) return
 `index.html` instead of a 404, allowing JavaScript frameworks to handle routing.
 
@@ -230,6 +248,7 @@ error_page 404 /404.html;
 ```
 
 ### 4.1 - Reflection Questions
+
 > If every route returns `index.html` with a 200, what are the SEO implications?
 > How do SSR frameworks like Next.js solve this problem?
 
@@ -238,6 +257,7 @@ error_page 404 /404.html;
 ## Checkpoint 5 — Rate Limiting
 
 ### Goal
+
 Protect the server from abusive request patterns using nginx's built-in
 rate limiting directives.
 
@@ -268,6 +288,7 @@ for i in $(seq 1 30); do curl -s -o /dev/null -w "%{http_code}\n" \
 Some responses should return `429 Too Many Requests` once the burst is exhausted.
 
 ### 5.1 - Reflection Question
+
 > Rate limiting on a static site might seem overkill — when would it actually
 > matter in production?
 
@@ -276,6 +297,7 @@ Some responses should return `429 Too Many Requests` once the burst is exhausted
 ## Checkpoint 6 — Block Sensitive Paths
 
 ### Goal
+
 Prevent accidental exposure of configuration files, version control artifacts,
 or environment files that might exist in the container.
 
@@ -306,6 +328,7 @@ curl -I http://localhost:8080/.env
 **Expected:** `404` — not the file contents.
 
 ### 6.1 - Reflection Question
+
 > Why return `404` instead of `403 Forbidden`? What information does each
 > status code leak to an attacker?
 
@@ -331,10 +354,10 @@ Submit a short written response (200-500 words) answering the following:
 
 ## Grading Rubric
 
-| Component | Points |
-|---|---|
-| All 6 checkpoints complete with working config | 40 |
-| Verification commands run and output documented (screenshots or paste) | 20 |
-| Written reflection — depth and specificity | 30 |
-| Config is clean, commented, and well-organized | 10 |
-| **Total** | **100** |
+| Component                                                              | Points  |
+| ---------------------------------------------------------------------- | ------- |
+| All 6 checkpoints complete with working config                         | 40      |
+| Verification commands run and output documented (screenshots or paste) | 20      |
+| Written reflection — depth and specificity                             | 30      |
+| Config is clean, commented, and well-organized                         | 10      |
+| **Total**                                                              | **100** |
