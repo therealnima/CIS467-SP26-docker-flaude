@@ -125,8 +125,9 @@ check the **Response Headers** panel.
 ### 1.1 Reflection Question
 
 > Why does `gzip_min_length` exist? What's the cost of compressing a 200-byte file?
+> if you compress a 200 byte file it will be 180 or 190 and its basically useless because you are using CPU power to do that,
 
----
+## so gzip min exist so you wouldnt waste CPU processing power.
 
 ## Checkpoint 2 — Cache Control
 
