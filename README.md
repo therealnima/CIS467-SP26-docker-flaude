@@ -166,8 +166,12 @@ Confirm different `Cache-Control` values on each response.
 
 > Why would caching `index.html` aggressively be dangerous for a single-page app?
 
+if you cache the index.html aggressively for SPAs, what could happen is you will deploy the new version of your app
+with new JS file but your cache still has your old JS file, so it fails to load
+
 > What would happen if a user's browser cached a stale `index.html` pointing to
 > old JS bundles?
+> The browser might request an outdated JS file that may not exist, so it will fail to load.
 
 ---
 
@@ -206,8 +210,9 @@ a tunneling tool, or deploy to a VPS for full scoring).
 > Break the CSP intentionally — add an inline `<script>` tag to `index.html`
 > and observe the browser console error. What does this teach you about
 > how CSP is enforced?
+> inline scripts are not considered self and because of this line in nginx.conf: script-src 'self', we get an error
 
----
+## so even if the code exist it will not run. Although we dont get a build error on our side.
 
 ## Checkpoint 4 — SPA Routing Fallback
 
@@ -253,9 +258,12 @@ error_page 404 /404.html;
 ### 4.1 - Reflection Questions
 
 > If every route returns `index.html` with a 200, what are the SEO implications?
+
+it will make all pages identical to search engines, so it will hurt the SEO.
+
 > How do SSR frameworks like Next.js solve this problem?
 
----
+## instead of sending one index.html file they will send html for every route, with correct status codes
 
 ## Checkpoint 5 — Rate Limiting
 
@@ -294,8 +302,9 @@ Some responses should return `429 Too Many Requests` once the burst is exhausted
 
 > Rate limiting on a static site might seem overkill — when would it actually
 > matter in production?
+> It is mainly for protecting against DDoS attacks, which might happen to static sites as well. If the site is hosted in the cloud
 
----
+## it can get costly if we are not protected against too many requests.
 
 ## Checkpoint 6 — Block Sensitive Paths
 
@@ -334,6 +343,7 @@ curl -I http://localhost:8080/.env
 
 > Why return `404` instead of `403 Forbidden`? What information does each
 > status code leak to an attacker?
+> A 404 answer is safer because it says "not found" but a 403 is saying that the file exists but you dont have access to it.
 
 ---
 
@@ -348,10 +358,20 @@ You should have a complete, working config. Review it as a whole and identify an
 Submit a short written response (200-500 words) answering the following:
 
 1. Which configuration had the most visible impact when you verified it? Why?
+   Well many of them did, but the one with rate limitting I could see the 429 codes in the terminal.
 2. Choose one header or directive you added. Research what a real-world attack
    looks like that it mitigates, and describe it briefly.
+
+   add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+   this is what Claude said:
+
+   If a user visits a page like /reset-password?token=abc123, browsers will by default include that full URL in the Referer header sent to any third-party resource on the page — handing your token to an analytics script or CDN without any active attack needed. This policy strips the URL down to just the bare origin on cross-origin requests, so sensitive query parameters never leave your server.
+
 3. What does this lab reveal about what managed hosting platforms like Netlify
    are silently doing on your behalf?
+
+   Netlify is essentially running a superset of what we've manually written here.
 
 ---
 
